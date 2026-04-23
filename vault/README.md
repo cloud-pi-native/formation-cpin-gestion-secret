@@ -37,7 +37,7 @@ secret kubernetes.
 
 ▶️ Depuis Gitlab, allez dans le projet `demo-java-infra` et vérifiez que vous êtes bien sur la branche **tuto**. 
 Ouvrez le répertoire **templates** du chart helm de déploiement et cliquez sur le bouton `+`>`New file`. Appelez votre 
-fichier `vault-exemple.yml`.
+fichier `vault-exemple.yaml`.
 
 ▶️ Ajoutez le contenu suivant :
 

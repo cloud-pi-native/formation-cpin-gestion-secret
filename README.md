@@ -21,3 +21,5 @@ Ce dépôt montre comment gérer les secrets dans une approche GitOps sur CPiN d
 > les faire récupérer par le cluster. Dans les deux cas, un objet *secret* Kubernetes sera créé.
 
 ▶️ Suivez les deux TPs afin de vous familiariser avec ces concepts et compléter ce chapitre. 
+
+Une fois les deux TPs terminés, vous pouvez passer à l'étape 6 : [Observabilité sur CPiN](https://github.com/cloud-pi-native/formation-cpin-observabilite)

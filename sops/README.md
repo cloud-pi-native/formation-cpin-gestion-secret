@@ -153,3 +153,5 @@ l'exemple ci-dessous :
                   key: password
                   name: mysecret-sops
 ```
+
+Bravo, vous avez terminé ce TP, revenez à la gestion des secrets pour [continuer](../README.md).

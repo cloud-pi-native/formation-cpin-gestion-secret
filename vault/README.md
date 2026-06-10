@@ -94,3 +94,4 @@ l'exemple ci-dessous :
                   key: password
                   name: mysecret-vault
 ```
+Bravo, vous avez terminé ce TP, revenez à la gestion des secrets pour [continuer](../README.md).

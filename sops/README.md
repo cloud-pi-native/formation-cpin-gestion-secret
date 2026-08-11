@@ -43,7 +43,7 @@ l'onglet *Clusters* de la console CPiN.
 
 ### Créer le fichier contenant le secret
 
-▶️ Créez en local sur votre machine, un fichier `exemple-sops.yaml` qui décrit un objet Kubernetes *SopsSecret* avec le
+▶️ Créez en local sur votre machine, un fichier `example-sops.yaml` qui décrit un objet Kubernetes *SopsSecret* avec le
 contenu suivant : 
 
 ```yaml
@@ -69,11 +69,11 @@ spec:
 ▶️ Exécuter la commande suivante : 
 
 ```bash
-sops -e --age [CLE_PUBLIQUE_SOPS_CLUSTER] --encrypted-suffix Templates ./exemple-sops.yaml > exemple-sops-enc.yaml
+sops -e --age [CLE_PUBLIQUE_SOPS_CLUSTER] --encrypted-suffix Templates ./example-sops.yaml > example-sops-enc.yaml
 ```
 
-Cette commande chiffre les clés YAML se terminant par "Templates" dans le fichier `exemple-sops.yaml` et redirige le 
-résultat dans un fichier ```exemple-sops-enc.yaml```.
+Cette commande chiffre les clés YAML se terminant par "Templates" dans le fichier `example-sops.yaml` et redirige le 
+résultat dans un fichier ```example-sops-enc.yaml```.
 
 Voici un exemple de contenu de fichier chiffré par SOPS :
 
@@ -115,14 +115,14 @@ sops:
 On voit que toutes les valeurs en dessous de la clé ***secretTemplates*** sont chiffrées et que dans la partie 
 ***sops***, le ***recipient*** correspond bien à la clé publique du cluster.
 
-Le fichier `exemple-sops-enc.yaml` peut maintenant être envoyé dans le dépôt Git, car son contenu est chiffré et les 
+Le fichier `example-sops-enc.yaml` peut maintenant être envoyé dans le dépôt Git, car son contenu est chiffré et les 
 éléments sensibles ne peuvent être déchiffrés par personne d'autre que le cluster qui détient la clé privée.
 
 ### Déploiement
 
 Pour déployer ce secret, vous devez l'ajouter à votre dépôt de code d'infrastructure.
 
-▶️ Ajoutez le fichier `exemple-sops-enc.yaml` dans le répertoire *templates* du chart helm de déploiement (dépôt 
+▶️ Ajoutez le fichier `example-sops-enc.yaml` dans le répertoire *templates* du chart helm de déploiement (dépôt 
 *demo-java-infra*) dans la branche ***tuto***. Une fois que le fichier est créé, *commit* puis *push*, retournez dans 
 votre application sur ArgoCD et cliquez sur le bouton *SYNC* puis *SYNCHRONIZE* pour voir s'appliquer vos modifications.
 

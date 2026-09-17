@@ -7,44 +7,42 @@
 
 ### SOPS
 
-L'installation de SOPS se fait en suivant les instructions du site : [https://github.com/getsops/sops](https://github.com/getsops/sops). Sous 
-Windows, l'installation peut se faire via l'utilitaire chocolatey : 
+Installez SOPS en suivant les instructions du dépôt [getsops/sops](https://github.com/getsops/sops). Sous Windows,
+l'installation peut se faire via Chocolatey :
 
 ```bash
 choco install sops
 ```
 
-### AGE
+### age
 
-Le format de clé utilisé sur CPiN est age : [https://github.com/FiloSottile/age](https://github.com/FiloSottile/age).
+Le format de clé utilisé sur CPiN est age : [FiloSottile/age](https://github.com/FiloSottile/age).
 
 ### Vérification
 
-▶️ Afin de vérifier que SOPS et AGE ont bien été installés, lancez un terminal et vérifiez les commandes suivantes :
-```bash
-c:\> sops -v
-sops 3.8.1 (latest)
+▶️ Pour vérifier que SOPS et age sont bien installés, ouvrez un terminal et lancez les commandes suivantes :
 
-c:\> age-keygen
-# created: 2024-06-21T09:54:52+02:00
-# public key: age187tmnp3ydzv6wvdl47tyysnakmvpmXXXXXXXXX
-AGE-SECRET-KEY-10AR2NPHAYRN4NE4H2C5JUK0AM9NWW0XXXXXXXXXX  
+```console
+$ sops -v
+
+$ age-keygen
 ```
-La commande ci-dessus génère une paire de clé à titre d'exemple qui n'est pas utilisée dans ce TP.
+
+La commande `age-keygen` génère une paire de clés à titre d'exemple, qui n'est pas utilisée dans ce TP.
 
 ## Gestion des secrets avec SOPS
 
 ### Récupération de la clé publique
 
-Une clé publique SOPS propre à chaque cluster est déjà provisionnée dans votre projet. Elle est consultable à partir de 
+Une clé publique SOPS propre à chaque cluster est déjà provisionnée dans votre projet. Elle est consultable depuis
 l'onglet *Clusters* de la console CPiN.
 
-![clé SOPS](./img/sops-cle-publique-cluster.png)
+![Clé publique SOPS d'un cluster dans la console CPiN](./img/sops-cle-publique-cluster.png)
 
 ### Créer le fichier contenant le secret
 
-▶️ Créez en local sur votre machine, un fichier `exemple-sops.yaml` qui décrit un objet Kubernetes *SopsSecret* avec le
-contenu suivant : 
+▶️ Créez en local sur votre machine un fichier `exemple-sops.yaml` qui décrit un objet Kubernetes `SopsSecret`, avec le
+contenu suivant :
 
 ```yaml
 apiVersion: isindir.github.com/v1alpha3
@@ -62,18 +60,19 @@ spec:
 ```
 
 > [!CAUTION]
-> Ce fichier ne doit pas être ajouté dans un repo git, car il va contenir un secret.
+> Ce fichier contient un secret en clair : il ne doit pas être ajouté à un dépôt Git. Supprimez-le une fois le fichier
+> chiffré généré.
 
 ### Chiffrer le secret avec la clé publique
 
-▶️ Exécuter la commande suivante : 
+▶️ Exécutez la commande suivante :
 
 ```bash
 sops -e --age [CLE_PUBLIQUE_SOPS_CLUSTER] --encrypted-suffix Templates ./exemple-sops.yaml > exemple-sops-enc.yaml
 ```
 
-Cette commande chiffre les clés YAML se terminant par "Templates" dans le fichier `exemple-sops.yaml` et redirige le 
-résultat dans un fichier ```exemple-sops-enc.yaml```.
+Cette commande chiffre les valeurs situées sous les clés YAML dont le nom se termine par `Templates` dans le fichier
+`exemple-sops.yaml`, et écrit le résultat dans le fichier `exemple-sops-enc.yaml`.
 
 Voici un exemple de contenu de fichier chiffré par SOPS :
 
@@ -112,46 +111,46 @@ sops:
     version: 3.8.1
 ```
 
-On voit que toutes les valeurs en dessous de la clé ***secretTemplates*** sont chiffrées et que dans la partie 
-***sops***, le ***recipient*** correspond bien à la clé publique du cluster.
+On voit que toutes les valeurs sous la clé `secretTemplates` sont chiffrées, et que dans la section `sops`, le
+`recipient` correspond bien à la clé publique du cluster.
 
-Le fichier `exemple-sops-enc.yaml` peut maintenant être envoyé dans le dépôt Git, car son contenu est chiffré et les 
-éléments sensibles ne peuvent être déchiffrés par personne d'autre que le cluster qui détient la clé privée.
+Le fichier `exemple-sops-enc.yaml` peut maintenant être poussé dans le dépôt Git : son contenu est chiffré, et seul le
+cluster, qui détient la clé privée, peut en déchiffrer les éléments sensibles.
 
 ### Déploiement
 
 Pour déployer ce secret, vous devez l'ajouter à votre dépôt de code d'infrastructure.
 
-▶️ Ajoutez le fichier `exemple-sops-enc.yaml` dans le répertoire *templates* du chart helm de déploiement (dépôt 
-*demo-java-infra*) dans la branche ***tuto***. Une fois que le fichier est créé, *commit* puis *push*, retournez dans 
-votre application sur ArgoCD et cliquez sur le bouton *SYNC* puis *SYNCHRONIZE* pour voir s'appliquer vos modifications.
+▶️ Ajoutez le fichier `exemple-sops-enc.yaml` dans le répertoire `templates` du chart Helm de déploiement (dépôt
+`demo-java-infra`), sur la branche **tuto**. Faites un *commit* puis un *push*, retournez dans votre application sur
+ArgoCD et cliquez sur le bouton *SYNC* puis *SYNCHRONIZE* pour appliquer vos modifications.
 
 > [!TIP]
-> Si votre application dans ArgoCD n'apparait pas encore comme *OutOfSync* après l'ajout de votre fichier, vous avez 
-> la possibilité de cliquer sur le bouton *REFRESH*. Voici le détail de chacune de ces opérations sur ArgoCD :
-> - SYNC: Réconcilie l'état courant de l'application avec l'état cible décrit par votre code source 
-> - REFRESH: Récupère la dernière version de vos manifests (fichiers source) depuis le dépôt Git et compare la 
-> différence.
-> - Hard Refresh: Invalide la version des manifests présente en cache présente dans ArgoCD avant d'effectuer une
-> opération de *Refresh*
+> Si votre application n'apparaît pas encore comme *OutOfSync* dans ArgoCD après l'ajout de votre fichier, vous pouvez
+> cliquer sur le bouton *REFRESH*. Voici le détail de chacune de ces opérations dans ArgoCD :
+>
+> - *SYNC* : réconcilie l'état courant de l'application avec l'état cible décrit par votre code source.
+> - *REFRESH* : récupère la dernière version de vos manifests depuis le dépôt Git et la compare à l'état courant.
+> - *HARD REFRESH* : invalide le cache des manifests d'ArgoCD avant d'effectuer un *REFRESH*.
 
-▶️ Vérifiez dans ArgoCD que votre secret est bien ajouté :
+▶️ Vérifiez dans ArgoCD que votre secret a bien été ajouté :
 
-![argo sops secret](./img/argo-sops-secret.png)
+![Secret SOPS dans l'arbre de l'application ArgoCD](./img/argo-sops-secret.png)
 
-En cliquant sur l'objet *secret*, vous pouvez accéder aux détails du secret.
+En cliquant sur l'objet *secret*, vous accédez à ses détails.
 
-![argo sops secret](./img/argo-sops-secret-detailed.png)
+![Détail du secret SOPS dans ArgoCD](./img/argo-sops-secret-detailed.png)
 
-Pour réutiliser un secret existant dans votre infrastructure, vous avez la possibilité de le référencer comme dans 
-l'exemple ci-dessous :
+Pour utiliser ce secret dans votre infrastructure, référencez-le par exemple dans les variables d'environnement d'un
+conteneur :
 
 ```yaml
-            - name: SPRING_DATASOURCE_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  key: password
-                  name: mysecret-sops
+env:
+  - name: SPRING_DATASOURCE_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: mysecret-sops
+        key: password
 ```
 
-Bravo, vous avez terminé ce TP, revenez à la gestion des secrets pour [continuer](../README.md).
+Bravo, vous avez terminé ce TP ! Revenez à la gestion des secrets pour [continuer](../README.md).

@@ -2,42 +2,45 @@
 
 ## Création d'un secret via l'interface web de Vault
 
-▶️ Ouvrez Vault en cliquant sur la tuile de Vault sous l'onglet **Services externes**. Une nouvelle fenêtre s'ouvre pour
-s'authentifier, cliquez sur le bouton bleu **Sign in with OIDC provider** :
+▶️ Ouvrez Vault en cliquant sur sa tuile dans l'onglet **Services externes** de la console CPiN. Une nouvelle fenêtre
+s'ouvre pour vous authentifier : cliquez sur le bouton bleu **Sign in with OIDC provider**.
 
-![login](./img/login.png)
+![Page de connexion à Vault](./img/login.png)
 
-Une fois authentifié, vous retrouvez un espace associé à votre projet (dans la nomenclature Hashicorp ce nom sera 
-référencé en tant que **mount**).
+Une fois authentifié, vous accédez à un coffre associé à votre projet (dans la nomenclature HashiCorp, ce coffre est
+appelé **mount**).
 
-![coffres](./img/secret-engine.png)
+![Coffre du projet dans Vault](./img/secret-engine.png)
 
-▶️ Pour créer un nouveau secret, cliquez sur le bouton à droite **Create secret +**, et remplissez les champs suivants :
-- `Path for this secret`: le chemin vers le secret dans le coffre. L'arborescence choisie, même complexe, est 
-automatiquement créée (dans la nomenclature Hashicorp ce nom sera référencé en tant que **path**)
-- `Secret data`: les données secrètes sous la forme clé-valeur
+▶️ Pour créer un nouveau secret, cliquez sur le bouton **Create secret +** à droite, puis remplissez les champs
+suivants :
 
-![create_secret](./img/create_secret.png)
+- `Path for this secret` : le chemin du secret dans le coffre, par exemple `formation/exemple`. L'arborescence choisie,
+  même complexe, est créée automatiquement (dans la nomenclature HashiCorp, ce chemin est appelé **path**).
+- `Secret data` : les données secrètes, sous forme de paires clé-valeur. Pour suivre l'exemple, créez une clé
+  `password`.
 
-▶️ Cliquez sur le bouton bleu **Save** pour enregistrer le nouveau secret. Une fois le secret créé, vault renvoie vers 
-l'arborescence du secret (dans l'exemple `formation/`, où se trouve le secret **exemple**) :
+![Formulaire de création d'un secret](./img/create_secret.png)
 
-![new secret list](./img/secret_created.png)
+▶️ Cliquez sur le bouton bleu **Save** pour enregistrer le nouveau secret. Vault affiche ensuite l'arborescence du
+secret (dans l'exemple, le dossier `formation/` contient le secret **exemple**) :
 
-## Création du secret
+![Secret créé dans l'arborescence](./img/secret_created.png)
 
-L'opérateur [Vault Secret Operator](https://developer.hashicorp.com/vault/tutorials/kubernetes/vault-secrets-operator)
-est installé sur les clusters afin de récupérer les secrets auprès de vault.
+## Synchronisation du secret dans le cluster
+
+L'opérateur [Vault Secrets Operator](https://developer.hashicorp.com/vault/tutorials/kubernetes/vault-secrets-operator)
+est installé sur les clusters afin de récupérer les secrets depuis Vault.
 
 Pour chaque projet créé dans la console, des objets de type `VaultConnection` et `VaultAuth` sont automatiquement créés
-afin de pouvoir authentifier le projet.
+afin d'authentifier le projet auprès de Vault.
 
-La récupération d'un secret passe par la création d'un objet de type `VaultStaticSecret` qui lui-même va générer un
-secret kubernetes.
+La récupération d'un secret passe par la création d'un objet de type `VaultStaticSecret`, qui génère à son tour un
+`Secret` Kubernetes.
 
-▶️ Depuis Gitlab, allez dans le projet `demo-java-infra` et vérifiez que vous êtes bien sur la branche **tuto**. 
-Ouvrez le répertoire **templates** du chart helm de déploiement et cliquez sur le bouton `+`>`New file`. Appelez votre 
-fichier `vault-exemple.yaml`.
+▶️ Depuis GitLab, ouvrez le projet `demo-java-infra` et vérifiez que vous êtes bien sur la branche **tuto**. Ouvrez le
+répertoire `templates` du chart Helm de déploiement et cliquez sur **+** > **New file**. Nommez votre fichier
+`vault-exemple.yaml`.
 
 ▶️ Ajoutez le contenu suivant :
 
@@ -47,51 +50,53 @@ kind: VaultStaticSecret
 metadata:
   name: my-vault-secret
 spec:
-  vaultAuthRef: vault-auth # Nom du VaultAuth, toujours vault-auth dans le cas de CPiN
-  mount: MON_COFFRE # Nom du coffre dans vault (correspond slug du projet visible depuis la console, en général le nom du projet)
+  vaultAuthRef: vault-auth # Nom du VaultAuth, toujours vault-auth sur CPiN
+  mount: MON_COFFRE # Nom du coffre dans Vault (slug du projet visible dans la console, en général le nom du projet)
   path: formation/exemple # Chemin vers le secret
-  type: kv-v2 # Type du coffre, toujours kv-v2 dans le cas de CPiN
+  type: kv-v2 # Type du coffre, toujours kv-v2 sur CPiN
   destination:
-    name: mysecret-vault # Nom du secret kubernetes que l'opérateur va créer
+    name: mysecret-vault # Nom du Secret Kubernetes que l'opérateur va créer
     create: true
 ```
 
-▶️ Remplacez les champs suivants dans le fichier :
-- `mount` : nom du coffre qui correspond au nom de votre projet, voir plus haut la notion de **mount**
-- `path` : chemin vers votre secret, si vous avez recopié l'exemple, laissez la valeur proposée
+▶️ Adaptez les champs suivants :
 
-Ce fichier ne contient pas d'information sensible et peut donc être ajouté au dépôt d'infrastructure.
+- `mount` : nom du coffre, c'est-à-dire le slug de votre projet (voir plus haut la notion de **mount**).
+- `path` : chemin vers votre secret. Si vous avez repris l'exemple, laissez la valeur proposée.
+
+Ce fichier ne contient aucune information sensible et peut donc être ajouté au dépôt d'infrastructure.
 
 ## Déploiement
 
-Une fois que le fichier est créé, *commit* puis *push*, retournez dans votre application sur ArgoCD et cliquez sur le 
-bouton *SYNC* puis *SYNCHRONIZE* pour voir s'appliquer vos modifications.
+▶️ Enregistrez le fichier avec **Commit changes**, retournez dans votre application sur ArgoCD et cliquez sur le bouton
+*SYNC* puis *SYNCHRONIZE* pour appliquer vos modifications.
 
 > [!TIP]
-> Si votre application dans ArgoCD n'apparait pas encore comme *OutOfSync* après l'ajout de votre fichier, vous avez
-> la possibilité de cliquer sur le bouton *REFRESH*. Voici le détail de chacune de ces opérations sur ArgoCD :
-> - SYNC: Réconcilie l'état courant de l'application avec l'état cible décrit par votre code source
-> - REFRESH: Récupère la dernière version de vos manifests (fichiers source) depuis le dépôt Git et compare la
-    > différence.
-> - Hard Refresh: Invalide la version des manifests présente en cache présente dans ArgoCD avant d'effectuer une
-    > opération de *Refresh*
+> Si votre application n'apparaît pas encore comme *OutOfSync* dans ArgoCD après l'ajout de votre fichier, vous pouvez
+> cliquer sur le bouton *REFRESH*. Voici le détail de chacune de ces opérations dans ArgoCD :
+>
+> - *SYNC* : réconcilie l'état courant de l'application avec l'état cible décrit par votre code source.
+> - *REFRESH* : récupère la dernière version de vos manifests depuis le dépôt Git et la compare à l'état courant.
+> - *HARD REFRESH* : invalide le cache des manifests d'ArgoCD avant d'effectuer un *REFRESH*.
 
-▶️ Vérifiez dans ArgoCD que votre secret est bien ajouté :
+▶️ Vérifiez dans ArgoCD que votre secret a bien été ajouté :
 
-![secret argoCD](./img/argo-vault-secret.png)
+![Secret Vault dans l'arbre de l'application ArgoCD](./img/argo-vault-secret.png)
 
-En cliquant sur l'objet *secret*, vous pouvez accéder aux details du secret.
+En cliquant sur l'objet *secret*, vous accédez à ses détails.
 
-![secret argoCD](./img/argo-vault-secret-detailed.png)
+![Détail du secret Vault dans ArgoCD](./img/argo-vault-secret-detailed.png)
 
-Pour réutiliser un secret existant dans votre infrastructure, vous avez la possibilité de le référencer comme dans
-l'exemple ci-dessous :
+Pour utiliser ce secret dans votre infrastructure, référencez-le par exemple dans les variables d'environnement d'un
+conteneur :
 
 ```yaml
-            - name: SPRING_DATASOURCE_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  key: password
-                  name: mysecret-vault
+env:
+  - name: SPRING_DATASOURCE_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: mysecret-vault
+        key: password
 ```
-Bravo, vous avez terminé ce TP, revenez à la gestion des secrets pour [continuer](../README.md).
+
+Bravo, vous avez terminé ce TP ! Revenez à la gestion des secrets pour [continuer](../README.md).
